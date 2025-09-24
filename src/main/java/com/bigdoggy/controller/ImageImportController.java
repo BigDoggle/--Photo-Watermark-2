@@ -3,8 +3,10 @@ package com.bigdoggy.controller;
 import com.bigdoggy.model.ImageItem;
 import com.bigdoggy.ui.ExportSettingsDialog;
 import com.bigdoggy.ui.MainWindow;
+import com.bigdoggy.ui.TextWatermarkDialog;
 
 import javax.swing.*;
+import java.awt.*;
 import java.awt.datatransfer.DataFlavor;
 import java.awt.datatransfer.Transferable;
 import java.awt.dnd.DnDConstants;
@@ -68,6 +70,169 @@ public class ImageImportController {
                 }
             }
         }
+    }
+
+    public void addTextWatermark() {
+        if (mainWindow.getImageListModel().getSize() == 0) {
+            JOptionPane.showMessageDialog(mainWindow.getFrame(), "请先导入图片", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // 显示文本水印设置对话框
+        TextWatermarkDialog dialog = new TextWatermarkDialog(mainWindow.getFrame());
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            // 应用文本水印到所有图片
+            applyTextWatermarkToAllImages(
+                dialog.getWatermarkText(),
+                dialog.getFontName(),
+                dialog.getFontSize(),
+                dialog.isBold(),
+                dialog.isItalic(),
+                dialog.getTextColor(),
+                dialog.getWatermarkOpacity(),
+                dialog.hasShadow(),
+                dialog.hasOutline()
+            );
+        }
+    }
+
+    private void applyTextWatermarkToAllImages(
+            String text, 
+            String fontName, 
+            int fontSize, 
+            boolean isBold, 
+            boolean isItalic, 
+            Color textColor, 
+            int opacity, 
+            boolean hasShadow, 
+            boolean hasOutline) {
+        
+        try {
+            // 创建字体
+            int fontStyle = Font.PLAIN;
+            if (isBold && isItalic) {
+                fontStyle = Font.BOLD | Font.ITALIC;
+            } else if (isBold) {
+                fontStyle = Font.BOLD;
+            } else if (isItalic) {
+                fontStyle = Font.ITALIC;
+            }
+            
+            Font font = new Font(fontName, fontStyle, fontSize);
+            
+            // 计算透明度 (0-255)
+            int alpha = (int) (255 * (opacity / 100.0));
+            Color transparentColor = new Color(
+                textColor.getRed(), 
+                textColor.getGreen(), 
+                textColor.getBlue(), 
+                alpha
+            );
+
+            // 对所有图片应用水印
+            for (int i = 0; i < mainWindow.getImageListModel().getSize(); i++) {
+                ImageItem item = mainWindow.getImageListModel().getElementAt(i);
+                File originalFile = item.getFile();
+
+                // 读取原图
+                BufferedImage originalImage = ImageIO.read(originalFile);
+                
+                // 创建带水印的图片
+                BufferedImage watermarkedImage = addTextWatermarkToImage(
+                    originalImage, 
+                    text, 
+                    font, 
+                    transparentColor, 
+                    hasShadow, 
+                    hasOutline
+                );
+
+                // 更新ImageItem中的图片
+                ImageIcon updatedIcon = new ImageIcon(watermarkedImage);
+                item.setIcon(updatedIcon);
+            }
+
+            // 通知列表更新
+            mainWindow.updateImageList();
+            
+            JOptionPane.showMessageDialog(mainWindow.getFrame(), 
+                "文本水印已添加到所有图片", 
+                "完成", 
+                JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mainWindow.getFrame(), 
+                "添加水印时发生错误：" + e.getMessage(), 
+                "错误", 
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private BufferedImage addTextWatermarkToImage(
+            BufferedImage originalImage, 
+            String text, 
+            Font font, 
+            Color textColor, 
+            boolean hasShadow, 
+            boolean hasOutline) {
+        
+        int width = originalImage.getWidth();
+        int height = originalImage.getHeight();
+        
+        // 创建新的图片用于绘制水印
+        BufferedImage watermarkedImage = new BufferedImage(width, height, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = watermarkedImage.createGraphics();
+        
+        // 绘制原图
+        g2d.drawImage(originalImage, 0, 0, null);
+        
+        // 设置抗锯齿
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+        g2d.setRenderingHint(RenderingHints.KEY_TEXT_ANTIALIASING, RenderingHints.VALUE_TEXT_ANTIALIAS_ON);
+        
+        // 设置字体和颜色
+        g2d.setFont(font);
+        g2d.setColor(textColor);
+        
+        // 计算文本尺寸
+        FontMetrics fm = g2d.getFontMetrics();
+        int textWidth = fm.stringWidth(text);
+        int textHeight = fm.getHeight();
+        
+        // 计算水印位置（右下角）
+        int x = width - textWidth - 20; // 距离右边20像素
+        int y = height - 20; // 距离底部20像素
+        
+        // 绘制阴影效果
+        if (hasShadow) {
+            Color shadowColor = new Color(0, 0, 0, textColor.getAlpha() / 2);
+            g2d.setColor(shadowColor);
+            g2d.drawString(text, x + 2, y + 2);
+            g2d.setColor(textColor);
+        }
+        
+        // 绘制描边效果
+        if (hasOutline) {
+            Color outlineColor = Color.BLACK;
+            g2d.setColor(outlineColor);
+            // 绘制多个位置的文字以形成描边效果
+            for (int dx = -1; dx <= 1; dx++) {
+                for (int dy = -1; dy <= 1; dy++) {
+                    if (dx != 0 || dy != 0) {
+                        g2d.drawString(text, x + dx, y + dy);
+                    }
+                }
+            }
+            g2d.setColor(textColor);
+        }
+        
+        // 绘制文字水印
+        g2d.drawString(text, x, y);
+        
+        g2d.dispose();
+        return watermarkedImage;
     }
 
     public void exportImages() {
@@ -135,8 +300,8 @@ public class ImageImportController {
                 String newName = generateNewFileName(originalFile.getName(), namingRule, prefix, suffix);
                 File outputFile = new File(outputFolder, newName);
                 
-                // 读取原图
-                BufferedImage image = ImageIO.read(originalFile);
+                // 获取带水印的图片
+                BufferedImage image = item.getBufferedImage();
                 
                 // 导出图片
                 if (mainWindow.getOutputFormat().equals("JPEG")) {

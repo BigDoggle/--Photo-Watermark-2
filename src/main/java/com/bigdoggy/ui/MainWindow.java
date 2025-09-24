@@ -33,7 +33,7 @@ public class MainWindow {
         imageList.setVisibleRowCount(-1);
 
         JScrollPane scrollPane = new JScrollPane(imageList);
-        scrollPane.setPreferredSize(new Dimension(400, 300));
+        scrollPane.setPreferredSize(new Dimension(1200, 800));
 
         // 添加拖拽支持
         imageImportController.addDragAndDropSupport(scrollPane);
@@ -61,12 +61,16 @@ public class MainWindow {
         JButton importFolderButton = new JButton("导入文件夹");
         importFolderButton.addActionListener(e -> imageImportController.importFolder());
 
+        JButton addTextWatermarkButton = new JButton("添加文本水印");
+        addTextWatermarkButton.addActionListener(e -> imageImportController.addTextWatermark());
+
         JButton exportButton = new JButton("导出图片");
         exportButton.addActionListener(e -> imageImportController.exportImages());
 
         toolbar.add(importSingleButton);
         toolbar.add(importMultipleButton);
         toolbar.add(importFolderButton);
+        toolbar.add(addTextWatermarkButton);
         toolbar.add(exportButton);
 
         return toolbar;
@@ -100,6 +104,11 @@ public class MainWindow {
 
     public DefaultListModel<ImageItem> getImageListModel() {
         return imageListModel;
+    }
+    
+    public void updateImageList() {
+        // 触发列表重新绘制，而不是直接调用fireContentsChanged
+        imageList.repaint();
     }
 
     public String getOutputFormat() {
