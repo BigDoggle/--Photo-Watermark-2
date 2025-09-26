@@ -73,15 +73,18 @@ public class TextWatermarkDialog extends JDialog {
     private void initializeComponents() {
         // 文本水印内容
         textWatermarkField = new JTextField(watermarkText, 15);
+        textWatermarkField.setPreferredSize(new Dimension(200, 25));
         
         // 字体选择
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         String[] fontNames = ge.getAvailableFontFamilyNames();
         fontComboBox = new JComboBox<>(fontNames);
         fontComboBox.setSelectedItem(fontName);
+        fontComboBox.setPreferredSize(new Dimension(150, 25));
         
         // 字号选择
         fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 120, 1));
+        fontSizeSpinner.setPreferredSize(new Dimension(80, 25));
         
         // 粗体和斜体
         boldCheckBox = new JCheckBox("粗体", isBold);
@@ -99,6 +102,7 @@ public class TextWatermarkDialog extends JDialog {
         opacitySlider.setMinorTickSpacing(5);
         opacitySlider.setPaintTicks(true);
         opacitySlider.setPaintLabels(true);
+        opacitySlider.setPreferredSize(new Dimension(250, 50));
         
         // 阴影和描边效果
         shadowCheckBox = new JCheckBox("阴影效果", hasShadow);
@@ -106,7 +110,7 @@ public class TextWatermarkDialog extends JDialog {
         
         // 高级设置组件
         previewPanel = new WatermarkPreviewPanel();
-        previewPanel.setPreferredSize(new Dimension(400, 300));
+        previewPanel.setPreferredSize(new Dimension(450, 350));
         previewPanel.setBorder(BorderFactory.createTitledBorder("预览"));
         
         // 旋转滑块
@@ -115,7 +119,7 @@ public class TextWatermarkDialog extends JDialog {
         rotationSlider.setMinorTickSpacing(15);
         rotationSlider.setPaintTicks(true);
         rotationSlider.setPaintLabels(true);
-        rotationSlider.setPreferredSize(new Dimension(250, 50)); // 增加尺寸以提供更多空间
+        rotationSlider.setPreferredSize(new Dimension(250, 50));
         
         // 位置选择下拉框
         String[] positions = {
@@ -125,10 +129,13 @@ public class TextWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
+        positionComboBox.setPreferredSize(new Dimension(150, 25));
         
         // 模板管理按钮
         saveTemplateButton = new JButton("保存为模板");
+        saveTemplateButton.setPreferredSize(new Dimension(100, 30));
         loadTemplateButton = new JButton("加载模板");
+        loadTemplateButton.setPreferredSize(new Dimension(100, 30));
     }
 
     private void layoutComponents() {
@@ -137,8 +144,13 @@ public class TextWatermarkDialog extends JDialog {
         // 主设置面板
         JPanel mainPanel = new JPanel(new GridBagLayout());
         mainPanel.setBorder(BorderFactory.createTitledBorder("文本水印设置"));
+        mainPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("文本水印设置"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
         
         // 文本内容
@@ -199,25 +211,29 @@ public class TextWatermarkDialog extends JDialog {
         mainPanel.add(positionComboBox, gbc);
         
         // 模板管理按钮
-        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         templateButtonPanel.add(saveTemplateButton);
         templateButtonPanel.add(loadTemplateButton);
         gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 4;
         mainPanel.add(templateButtonPanel, gbc);
         
         // 创建包含主设置和预览的中间面板
-        JPanel centerPanel = new JPanel(new BorderLayout());
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         centerPanel.add(mainPanel, BorderLayout.WEST);
         centerPanel.add(previewPanel, BorderLayout.CENTER);
         
         add(centerPanel, BorderLayout.CENTER);
         
         // 按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton okButton = new JButton("确定");
+        okButton.setPreferredSize(new Dimension(80, 30));
         JButton cancelButton = new JButton("取消");
+        cancelButton.setPreferredSize(new Dimension(80, 30));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
         add(buttonPanel, BorderLayout.SOUTH);
         
         // 按钮事件处理

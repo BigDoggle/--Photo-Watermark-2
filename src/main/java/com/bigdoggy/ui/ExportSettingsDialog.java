@@ -45,16 +45,19 @@ public class ExportSettingsDialog extends JDialog {
 
         // 文本输入框
         prefixField = new JTextField(10);
+        prefixField.setPreferredSize(new Dimension(120, 25));
         suffixField = new JTextField(10);
+        suffixField.setPreferredSize(new Dimension(120, 25));
 
         // JPEG质量滑块（仅当输出格式为JPEG时显示）
         qualityLabel = new JLabel("图片质量: 90");
-        qualityLabel.setPreferredSize(new Dimension(100, 20)); // 固定标签大小避免布局跳动
+        qualityLabel.setPreferredSize(new Dimension(120, 25));
         qualitySlider = new JSlider(0, 100, 90);
         qualitySlider.setMajorTickSpacing(20);
         qualitySlider.setMinorTickSpacing(5);
         qualitySlider.setPaintTicks(true);
         qualitySlider.setPaintLabels(true);
+        qualitySlider.setPreferredSize(new Dimension(250, 50));
         
         // 根据输出格式决定是否显示质量设置
         qualityLabel.setVisible("JPEG".equals(outputFormat));
@@ -63,10 +66,14 @@ public class ExportSettingsDialog extends JDialog {
 
     private void layoutComponents() {
         setLayout(new BorderLayout());
-
+        
         // 命名规则面板
         JPanel namingPanel = new JPanel(new GridBagLayout());
-        namingPanel.setBorder(BorderFactory.createTitledBorder("文件命名规则"));
+        namingPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("文件命名规则"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
         GridBagConstraints gbc = new GridBagConstraints();
         gbc.anchor = GridBagConstraints.WEST;
         gbc.insets = new Insets(5, 5, 5, 5);
@@ -93,24 +100,31 @@ public class ExportSettingsDialog extends JDialog {
         namingPanel.add(suffixField, gbc);
 
         // 质量设置面板
-        JPanel qualityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
-        qualityPanel.setBorder(BorderFactory.createTitledBorder("JPEG质量设置"));
+        JPanel qualityPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        qualityPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("JPEG质量设置"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
         qualityPanel.add(qualityLabel);
         qualityPanel.add(qualitySlider);
         qualityPanel.setVisible(qualityLabel.isVisible());
 
         // 主面板
-        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel mainPanel = new JPanel(new BorderLayout(0, 10));
+        mainPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         mainPanel.add(namingPanel, BorderLayout.CENTER);
         mainPanel.add(qualityPanel, BorderLayout.SOUTH);
         add(mainPanel, BorderLayout.CENTER);
 
         // 按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton okButton = new JButton("确定");
+        okButton.setPreferredSize(new Dimension(80, 30));
         JButton cancelButton = new JButton("取消");
+        cancelButton.setPreferredSize(new Dimension(80, 30));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
         add(buttonPanel, BorderLayout.SOUTH);
 
         // 按钮事件处理

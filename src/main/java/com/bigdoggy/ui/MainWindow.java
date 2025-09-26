@@ -34,6 +34,8 @@ public class MainWindow {
 
         JScrollPane scrollPane = new JScrollPane(imageList);
         scrollPane.setPreferredSize(new Dimension(1200, 800));
+        // 添加内边距以改善视觉效果
+        scrollPane.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
 
         // 添加拖拽支持
         imageImportController.addDragAndDropSupport(scrollPane);
@@ -44,30 +46,41 @@ public class MainWindow {
         JPanel bottomPanel = createOutputFormatPanel();
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
-        frame.setBounds(400, 300, 800, 500);
+        frame.setBounds(400, 300, 1000, 700);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
 
     private JPanel createToolbar() {
-        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        // 使用带边距的工具栏面板
+        JPanel toolbar = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
+        toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
+        // 设置统一的按钮大小和样式
+        Dimension buttonSize = new Dimension(120, 35);
 
         JButton importSingleButton = new JButton("导入单张图片");
+        importSingleButton.setPreferredSize(buttonSize);
         importSingleButton.addActionListener(e -> imageImportController.importSingleImage());
 
         JButton importMultipleButton = new JButton("批量导入图片");
+        importMultipleButton.setPreferredSize(buttonSize);
         importMultipleButton.addActionListener(e -> imageImportController.importMultipleImages());
 
         JButton importFolderButton = new JButton("导入文件夹");
+        importFolderButton.setPreferredSize(buttonSize);
         importFolderButton.addActionListener(e -> imageImportController.importFolder());
 
         JButton addTextWatermarkButton = new JButton("添加文本水印");
+        addTextWatermarkButton.setPreferredSize(buttonSize);
         addTextWatermarkButton.addActionListener(e -> imageImportController.addTextWatermark());
 
         JButton addImageWatermarkButton = new JButton("添加图片水印");
+        addImageWatermarkButton.setPreferredSize(buttonSize);
         addImageWatermarkButton.addActionListener(e -> imageImportController.addImageWatermark());
 
         JButton exportButton = new JButton("导出图片");
+        exportButton.setPreferredSize(buttonSize);
         exportButton.addActionListener(e -> imageImportController.exportImages());
 
         toolbar.add(importSingleButton);
@@ -81,7 +94,7 @@ public class MainWindow {
     }
 
     private JPanel createOutputFormatPanel() {
-        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel panel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         panel.setBorder(BorderFactory.createTitledBorder("输出设置"));
 
         JLabel formatLabel = new JLabel("输出格式:");

@@ -35,8 +35,14 @@ public class WatermarkPreviewPanel extends JPanel {
     }
 
     public WatermarkPreviewPanel() {
-        setPreferredSize(new Dimension(400, 300));
-        setBackground(Color.LIGHT_GRAY);
+        setPreferredSize(new Dimension(450, 350));
+        setBackground(new Color(245, 245, 245)); // 设置浅灰色背景
+        
+        // 添加边框以改善视觉效果
+        setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("预览"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
         
         // 添加鼠标事件监听器以支持拖拽
         addMouseListener(new MouseAdapter() {

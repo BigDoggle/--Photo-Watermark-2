@@ -72,9 +72,11 @@ public class ImageWatermarkDialog extends JDialog {
         
         // 选择图片按钮
         selectImageButton = new JButton("选择图片");
+        selectImageButton.setPreferredSize(new Dimension(100, 30));
         
         // 缩放比例选择（用于图片水印本身）
         scaleSpinner = new JSpinner(new SpinnerNumberModel(scale, 10, 500, 5));
+        scaleSpinner.setPreferredSize(new Dimension(80, 25));
         
         // 透明度滑块
         opacitySlider = new JSlider(0, 100, watermarkOpacity);
@@ -82,22 +84,23 @@ public class ImageWatermarkDialog extends JDialog {
         opacitySlider.setMinorTickSpacing(5);
         opacitySlider.setPaintTicks(true);
         opacitySlider.setPaintLabels(true);
+        opacitySlider.setPreferredSize(new Dimension(250, 50));
         
         opacityLabel = new JLabel("透明度: " + watermarkOpacity + "%");
-        opacityLabel.setPreferredSize(new Dimension(100, 20));
+        opacityLabel.setPreferredSize(new Dimension(120, 25));
         
         // 高级设置组件
         previewPanel = new WatermarkPreviewPanel();
-        previewPanel.setPreferredSize(new Dimension(400, 300));
+        previewPanel.setPreferredSize(new Dimension(450, 350));
         previewPanel.setBorder(BorderFactory.createTitledBorder("预览"));
         
         // 缩放滑块（用于预览中的缩放）
         scaleSlider = new JSlider(10, 500, (int)scale);
-        scaleSlider.setMajorTickSpacing(50);  // 减少标签密度，每50个单位一个主刻度
+        scaleSlider.setMajorTickSpacing(50);
         scaleSlider.setMinorTickSpacing(10);
         scaleSlider.setPaintTicks(true);
         scaleSlider.setPaintLabels(true);
-        scaleSlider.setPreferredSize(new Dimension(250, 50)); // 增加尺寸以提供更多空间
+        scaleSlider.setPreferredSize(new Dimension(250, 50));
         
         // 旋转滑块
         rotationSlider = new JSlider(-180, 180, (int)rotation);
@@ -105,7 +108,7 @@ public class ImageWatermarkDialog extends JDialog {
         rotationSlider.setMinorTickSpacing(15);
         rotationSlider.setPaintTicks(true);
         rotationSlider.setPaintLabels(true);
-        rotationSlider.setPreferredSize(new Dimension(250, 50)); // 增加尺寸以提供更多空间
+        rotationSlider.setPreferredSize(new Dimension(250, 50));
         
         // 位置选择下拉框
         String[] positions = {
@@ -115,10 +118,13 @@ public class ImageWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
+        positionComboBox.setPreferredSize(new Dimension(150, 25));
         
         // 模板管理按钮
         saveTemplateButton = new JButton("保存为模板");
+        saveTemplateButton.setPreferredSize(new Dimension(100, 30));
         loadTemplateButton = new JButton("加载模板");
+        loadTemplateButton.setPreferredSize(new Dimension(100, 30));
     }
 
     private void layoutComponents() {
@@ -126,9 +132,13 @@ public class ImageWatermarkDialog extends JDialog {
         
         // 主设置面板
         JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(BorderFactory.createTitledBorder("图片水印设置"));
+        mainPanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("图片水印设置"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
         GridBagConstraints gbc = new GridBagConstraints();
-        gbc.insets = new Insets(5, 5, 5, 5);
+        gbc.insets = new Insets(8, 8, 8, 8);
         gbc.anchor = GridBagConstraints.WEST;
         
         // 图片选择和预览
@@ -174,25 +184,29 @@ public class ImageWatermarkDialog extends JDialog {
         mainPanel.add(positionComboBox, gbc);
         
         // 模板管理按钮
-        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         templateButtonPanel.add(saveTemplateButton);
         templateButtonPanel.add(loadTemplateButton);
         gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 4;
         mainPanel.add(templateButtonPanel, gbc);
         
         // 创建包含主设置和预览的中间面板
-        JPanel centerPanel = new JPanel(new BorderLayout());
+        JPanel centerPanel = new JPanel(new BorderLayout(10, 10));
+        centerPanel.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         centerPanel.add(mainPanel, BorderLayout.WEST);
         centerPanel.add(previewPanel, BorderLayout.CENTER);
         
         add(centerPanel, BorderLayout.CENTER);
         
         // 按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout());
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton okButton = new JButton("确定");
+        okButton.setPreferredSize(new Dimension(80, 30));
         JButton cancelButton = new JButton("取消");
+        cancelButton.setPreferredSize(new Dimension(80, 30));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
         add(buttonPanel, BorderLayout.SOUTH);
         
         // 按钮事件处理

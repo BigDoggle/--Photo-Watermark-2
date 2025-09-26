@@ -43,11 +43,19 @@ public class TemplateManagerDialog extends JDialog {
             loadButton.setEnabled(selectedRow >= 0);
         });
         
+        // 设置表格外观
+        templateTable.setRowHeight(25);
+        templateTable.getTableHeader().setPreferredSize(new Dimension(0, 30));
+        templateTable.getTableHeader().setFont(new Font("微软雅黑", Font.BOLD, 12));
+        
         loadButton = new JButton("加载选中模板");
         loadButton.setEnabled(false);
+        loadButton.setPreferredSize(new Dimension(120, 30));
         deleteButton = new JButton("删除选中模板");
         deleteButton.setEnabled(false);
+        deleteButton.setPreferredSize(new Dimension(120, 30));
         closeButton = new JButton("关闭");
+        closeButton.setPreferredSize(new Dimension(80, 30));
     }
     
     private void layoutComponents() {
@@ -56,18 +64,23 @@ public class TemplateManagerDialog extends JDialog {
         // 表格面板
         JPanel tablePanel = new JPanel(new BorderLayout());
         tablePanel.setBorder(BorderFactory.createTitledBorder("已保存的模板"));
-        tablePanel.add(new JScrollPane(templateTable), BorderLayout.CENTER);
+        tablePanel.setBorder(BorderFactory.createCompoundBorder(
+            BorderFactory.createTitledBorder("已保存的模板"),
+            BorderFactory.createEmptyBorder(10, 10, 10, 10)
+        ));
+        
+        JScrollPane scrollPane = new JScrollPane(templateTable);
+        scrollPane.setPreferredSize(new Dimension(600, 250));
+        tablePanel.add(scrollPane, BorderLayout.CENTER);
         add(tablePanel, BorderLayout.CENTER);
         
         // 按钮面板
-        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT));
+        JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         buttonPanel.add(loadButton);
         buttonPanel.add(deleteButton);
         buttonPanel.add(closeButton);
+        buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));
         add(buttonPanel, BorderLayout.SOUTH);
-        
-        // 设置首选大小
-        templateTable.setPreferredScrollableViewportSize(new Dimension(500, 200));
     }
     
     private void setupEventHandlers() {

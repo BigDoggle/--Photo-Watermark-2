@@ -10,13 +10,24 @@ public class ImageListCellRenderer extends JPanel implements ListCellRenderer<Im
     private JLabel nameLabel;
 
     public ImageListCellRenderer() {
-        setLayout(new BorderLayout());
+        setLayout(new BorderLayout(0, 5));
+        setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
+        
         imageLabel = new JLabel();
+        imageLabel.setHorizontalAlignment(JLabel.CENTER);
+        imageLabel.setVerticalAlignment(JLabel.CENTER);
+        imageLabel.setPreferredSize(new Dimension(120, 120));
+        imageLabel.setBorder(BorderFactory.createEtchedBorder());
+        
         nameLabel = new JLabel();
-        nameLabel.setHorizontalAlignment(JLabel.CENTER);//居中
+        nameLabel.setHorizontalAlignment(JLabel.CENTER);
+        nameLabel.setVerticalAlignment(JLabel.BOTTOM);
 
         add(imageLabel, BorderLayout.CENTER);
         add(nameLabel, BorderLayout.SOUTH);
+        
+        // 设置首选大小以确保一致的显示
+        setPreferredSize(new Dimension(150, 170));
     }
 
     @Override
@@ -43,9 +54,11 @@ public class ImageListCellRenderer extends JPanel implements ListCellRenderer<Im
         // 设置选中状态的背景色
         if (isSelected) {
             setBackground(list.getSelectionBackground());
+            setBorder(BorderFactory.createLineBorder(list.getSelectionForeground(), 2, true));
             nameLabel.setForeground(list.getSelectionForeground());
         } else {
             setBackground(list.getBackground());
+            setBorder(BorderFactory.createLineBorder(list.getBackground(), 2, true));
             nameLabel.setForeground(list.getForeground());
         }
 
