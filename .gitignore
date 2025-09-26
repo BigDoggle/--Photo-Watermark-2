@@ -36,3 +36,7 @@ build/
 
 ### Mac OS ###
 .DS_Store
+
+### Baidu Netdisk ###
+*.baiduyun.uploading.cfg
+*.baiduyun.*
