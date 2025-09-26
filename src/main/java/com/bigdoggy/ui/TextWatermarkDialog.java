@@ -2,6 +2,7 @@ package com.bigdoggy.ui;
 
 import com.bigdoggy.model.ImageItem;
 import com.bigdoggy.ui.WatermarkPreviewPanel.WatermarkPosition;
+import com.bigdoggy.utils.TemplateManager;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -29,6 +30,10 @@ public class TextWatermarkDialog extends JDialog {
     private JComboBox<String> positionComboBox;
     private WatermarkPreviewPanel previewPanel;
     
+    // 模板管理控件
+    private JButton saveTemplateButton;
+    private JButton loadTemplateButton;
+    
     // 默认值
     private String watermarkText = "水印文本";
     private String fontName = "宋体";
@@ -55,6 +60,9 @@ public class TextWatermarkDialog extends JDialog {
             previewPanel.setImageItem(previewImage);
             updatePreview();
         }
+        
+        // 尝试加载上次会话
+        loadLastSession();
         
         setDefaultCloseOperation(DISPOSE_ON_CLOSE);
         pack();
@@ -117,6 +125,10 @@ public class TextWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
+        
+        // 模板管理按钮
+        saveTemplateButton = new JButton("保存为模板");
+        loadTemplateButton = new JButton("加载模板");
     }
 
     private void layoutComponents() {
@@ -186,6 +198,13 @@ public class TextWatermarkDialog extends JDialog {
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(positionComboBox, gbc);
         
+        // 模板管理按钮
+        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        templateButtonPanel.add(saveTemplateButton);
+        templateButtonPanel.add(loadTemplateButton);
+        gbc.gridx = 0; gbc.gridy = 8; gbc.gridwidth = 4;
+        mainPanel.add(templateButtonPanel, gbc);
+        
         // 创建包含主设置和预览的中间面板
         JPanel centerPanel = new JPanel(new BorderLayout());
         centerPanel.add(mainPanel, BorderLayout.WEST);
@@ -218,6 +237,9 @@ public class TextWatermarkDialog extends JDialog {
                 // 高级设置值
                 rotation = rotationSlider.getValue();
                 position = WatermarkPosition.values()[positionComboBox.getSelectedIndex()];
+                
+                // 保存当前会话
+                saveCurrentSession();
                 
                 dispose();
             }
@@ -283,6 +305,21 @@ public class TextWatermarkDialog extends JDialog {
                 updatePreview();
             }
         });
+        
+        // 模板管理按钮事件
+        saveTemplateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveTemplate();
+            }
+        });
+        
+        loadTemplateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadTemplate();
+            }
+        });
     }
     
     // 更新预览
@@ -313,6 +350,140 @@ public class TextWatermarkDialog extends JDialog {
         previewPanel.setRotation(rotation);
         previewPanel.setPresetPosition(position);
         previewPanel.setUsePresetPosition(true); // 使用预设位置
+    }
+    
+    // 保存为模板
+    private void saveTemplate() {
+        // 更新预览以确保所有设置都是最新的
+        updatePreview();
+        
+        String templateName = JOptionPane.showInputDialog(this, "请输入模板名称:", "保存模板", JOptionPane.QUESTION_MESSAGE);
+        if (templateName == null || templateName.trim().isEmpty()) {
+            return;
+        }
+        
+        com.bigdoggy.model.WatermarkTemplate template = new com.bigdoggy.model.WatermarkTemplate();
+        template.setName(templateName.trim());
+        template.setType(com.bigdoggy.model.WatermarkTemplate.TemplateType.TEXT);
+        
+        // 设置文本水印参数
+        template.setTextWatermark(textWatermarkField.getText());
+        template.setFontName((String) fontComboBox.getSelectedItem());
+        template.setFontSize((Integer) fontSizeSpinner.getValue());
+        template.setBold(boldCheckBox.isSelected());
+        template.setItalic(italicCheckBox.isSelected());
+        template.setTextColor(TemplateManager.cloneColor(textColor));
+        template.setTextOpacity(opacitySlider.getValue());
+        template.setHasShadow(shadowCheckBox.isSelected());
+        template.setHasOutline(outlineCheckBox.isSelected());
+        
+        // 设置通用参数
+        template.setRotation(rotationSlider.getValue());
+        template.setPosition(com.bigdoggy.model.WatermarkTemplate.WatermarkPosition.values()[positionComboBox.getSelectedIndex()]);
+        
+        // 设置自定义位置（如果有的话）
+        if (!previewPanel.isUsePresetPosition()) {
+            template.setCustomPosition(TemplateManager.clonePoint(previewPanel.getWatermarkPosition()));
+        }
+        
+        // 保存模板
+        if (TemplateManager.getInstance().saveTemplate(template)) {
+            JOptionPane.showMessageDialog(this, "模板保存成功！", "成功", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "模板保存失败！", "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // 加载模板
+    private void loadTemplate() {
+        Frame parentFrame = JOptionPane.getFrameForComponent(this);
+        TemplateManagerDialog dialog = new TemplateManagerDialog(parentFrame);
+        dialog.setVisible(true);
+        
+        com.bigdoggy.model.WatermarkTemplate template = dialog.getSelectedTemplate();
+        if (template != null && template.getType() == com.bigdoggy.model.WatermarkTemplate.TemplateType.TEXT) {
+            loadTemplateData(template);
+        }
+    }
+    
+    // 加载模板数据到界面
+    private void loadTemplateData(com.bigdoggy.model.WatermarkTemplate template) {
+        // 加载文本水印参数
+        if (template.getTextWatermark() != null) {
+            textWatermarkField.setText(template.getTextWatermark());
+        }
+        
+        if (template.getFontName() != null) {
+            fontComboBox.setSelectedItem(template.getFontName());
+        }
+        
+        fontSizeSpinner.setValue(template.getFontSize());
+        boldCheckBox.setSelected(template.isBold());
+        italicCheckBox.setSelected(template.isItalic());
+        
+        if (template.getTextColor() != null) {
+            textColor = template.getTextColor();
+            colorButton.setBackground(textColor);
+            colorButton.setForeground(textColor);
+        }
+        
+        opacitySlider.setValue(template.getTextOpacity());
+        shadowCheckBox.setSelected(template.isHasShadow());
+        outlineCheckBox.setSelected(template.isHasOutline());
+        
+        // 加载通用参数
+        rotationSlider.setValue((int) template.getRotation());
+        
+        if (template.getPosition() != null) {
+            positionComboBox.setSelectedIndex(template.getPosition().ordinal());
+        }
+        
+        // 加载自定义位置（如果有的话）
+        if (template.getCustomPosition() != null) {
+            previewPanel.setUsePresetPosition(false);
+            previewPanel.setWatermarkPosition(template.getCustomPosition());
+        } else {
+            previewPanel.setUsePresetPosition(true);
+        }
+        
+        // 更新预览
+        updatePreview();
+    }
+    
+    // 加载上次会话
+    private void loadLastSession() {
+        com.bigdoggy.model.WatermarkTemplate template = TemplateManager.getInstance().loadLastSession();
+        if (template != null && template.getType() == com.bigdoggy.model.WatermarkTemplate.TemplateType.TEXT) {
+            loadTemplateData(template);
+        }
+    }
+    
+    // 保存当前会话
+    private void saveCurrentSession() {
+        com.bigdoggy.model.WatermarkTemplate template = new com.bigdoggy.model.WatermarkTemplate();
+        template.setType(com.bigdoggy.model.WatermarkTemplate.TemplateType.TEXT);
+        
+        // 设置文本水印参数
+        template.setTextWatermark(textWatermarkField.getText());
+        template.setFontName((String) fontComboBox.getSelectedItem());
+        template.setFontSize((Integer) fontSizeSpinner.getValue());
+        template.setBold(boldCheckBox.isSelected());
+        template.setItalic(italicCheckBox.isSelected());
+        template.setTextColor(TemplateManager.cloneColor(textColor));
+        template.setTextOpacity(opacitySlider.getValue());
+        template.setHasShadow(shadowCheckBox.isSelected());
+        template.setHasOutline(outlineCheckBox.isSelected());
+        
+        // 设置通用参数
+        template.setRotation(rotationSlider.getValue());
+        template.setPosition(com.bigdoggy.model.WatermarkTemplate.WatermarkPosition.values()[positionComboBox.getSelectedIndex()]);
+        
+        // 设置自定义位置（如果有的话）
+        if (!previewPanel.isUsePresetPosition()) {
+            template.setCustomPosition(TemplateManager.clonePoint(previewPanel.getWatermarkPosition()));
+        }
+        
+        TemplateManager.getInstance().saveCurrentSession(template);
     }
 
     public boolean isConfirmed() {

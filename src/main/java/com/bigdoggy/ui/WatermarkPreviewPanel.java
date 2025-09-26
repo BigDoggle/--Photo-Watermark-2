@@ -324,6 +324,15 @@ public class WatermarkPreviewPanel extends JPanel {
         return new Point(watermarkPosition);
     }
 
+    // 设置水印位置
+    public void setWatermarkPosition(Point position) {
+        if (position != null) {
+            this.watermarkPosition.setLocation(position);
+            this.usePresetPosition = false;
+            repaint();
+        }
+    }
+
     // 获取旋转角度（度数）
     public double getRotation() {
         return Math.toDegrees(rotation);

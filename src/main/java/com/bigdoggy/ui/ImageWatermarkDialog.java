@@ -2,6 +2,7 @@ package com.bigdoggy.ui;
 
 import com.bigdoggy.model.ImageItem;
 import com.bigdoggy.ui.WatermarkPreviewPanel.WatermarkPosition;
+import com.bigdoggy.utils.TemplateManager;
 
 import javax.swing.*;
 import javax.swing.event.ChangeEvent;
@@ -32,6 +33,10 @@ public class ImageWatermarkDialog extends JDialog {
     private JSlider rotationSlider;
     private JComboBox<String> positionComboBox;
     private WatermarkPreviewPanel previewPanel;
+    
+    // 模板管理控件
+    private JButton saveTemplateButton;
+    private JButton loadTemplateButton;
     
     // 默认值
     private double scale = 100.0; // 百分比
@@ -110,6 +115,10 @@ public class ImageWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
+        
+        // 模板管理按钮
+        saveTemplateButton = new JButton("保存为模板");
+        loadTemplateButton = new JButton("加载模板");
     }
 
     private void layoutComponents() {
@@ -163,6 +172,13 @@ public class ImageWatermarkDialog extends JDialog {
         mainPanel.add(new JLabel("位置:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(positionComboBox, gbc);
+        
+        // 模板管理按钮
+        JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        templateButtonPanel.add(saveTemplateButton);
+        templateButtonPanel.add(loadTemplateButton);
+        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 4;
+        mainPanel.add(templateButtonPanel, gbc);
         
         // 创建包含主设置和预览的中间面板
         JPanel centerPanel = new JPanel(new BorderLayout());
@@ -257,6 +273,21 @@ public class ImageWatermarkDialog extends JDialog {
                 updatePreview();
             }
         });
+        
+        // 模板管理按钮事件
+        saveTemplateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                saveTemplate();
+            }
+        });
+        
+        loadTemplateButton.addActionListener(new ActionListener() {
+            @Override
+            public void actionPerformed(ActionEvent e) {
+                loadTemplate();
+            }
+        });
     }
     
     private void selectWatermarkImage() {
@@ -319,6 +350,104 @@ public class ImageWatermarkDialog extends JDialog {
             previewPanel.setPresetPosition(position);
             previewPanel.setUsePresetPosition(true); // 使用预设位置
         }
+    }
+    
+    // 保存为模板
+    private void saveTemplate() {
+        if (watermarkImage == null) {
+            JOptionPane.showMessageDialog(this, "请先选择一张水印图片", "提示", JOptionPane.WARNING_MESSAGE);
+            return;
+        }
+        
+        // 更新预览以确保所有设置都是最新的
+        updatePreview();
+        
+        String templateName = JOptionPane.showInputDialog(this, "请输入模板名称:", "保存模板", JOptionPane.QUESTION_MESSAGE);
+        if (templateName == null || templateName.trim().isEmpty()) {
+            return;
+        }
+        
+        com.bigdoggy.model.WatermarkTemplate template = new com.bigdoggy.model.WatermarkTemplate();
+        template.setName(templateName.trim());
+        template.setType(com.bigdoggy.model.WatermarkTemplate.TemplateType.IMAGE);
+        
+        // 设置图片水印参数
+        if (watermarkFile != null) {
+            template.setImagePath(watermarkFile.getAbsolutePath());
+        }
+        template.setImageScale((Double) scaleSpinner.getValue());
+        template.setImageOpacity(opacitySlider.getValue());
+        
+        // 设置通用参数
+        template.setRotation(rotationSlider.getValue());
+        template.setPosition(com.bigdoggy.model.WatermarkTemplate.WatermarkPosition.values()[positionComboBox.getSelectedIndex()]);
+        
+        // 设置自定义位置（如果有的话）
+        if (!previewPanel.isUsePresetPosition()) {
+            template.setCustomPosition(TemplateManager.clonePoint(previewPanel.getWatermarkPosition()));
+        }
+        
+        // 保存模板
+        if (TemplateManager.getInstance().saveTemplate(template)) {
+            JOptionPane.showMessageDialog(this, "模板保存成功！", "成功", JOptionPane.INFORMATION_MESSAGE);
+        } else {
+            JOptionPane.showMessageDialog(this, "模板保存失败！", "错误", JOptionPane.ERROR_MESSAGE);
+        }
+    }
+    
+    // 加载模板
+    private void loadTemplate() {
+        Frame parentFrame = JOptionPane.getFrameForComponent(this);
+        TemplateManagerDialog dialog = new TemplateManagerDialog(parentFrame);
+        dialog.setVisible(true);
+        
+        com.bigdoggy.model.WatermarkTemplate template = dialog.getSelectedTemplate();
+        if (template != null && template.getType() == com.bigdoggy.model.WatermarkTemplate.TemplateType.IMAGE) {
+            loadTemplateData(template);
+        }
+    }
+    
+    // 加载模板数据到界面
+    private void loadTemplateData(com.bigdoggy.model.WatermarkTemplate template) {
+        // 加载图片水印参数
+        if (template.getImagePath() != null) {
+            try {
+                File file = new File(template.getImagePath());
+                if (file.exists()) {
+                    watermarkFile = file;
+                    watermarkImage = ImageIO.read(watermarkFile);
+                    displayImagePreview();
+                } else {
+                    JOptionPane.showMessageDialog(this, "找不到图片文件: " + template.getImagePath(), "错误", JOptionPane.ERROR_MESSAGE);
+                    return;
+                }
+            } catch (Exception e) {
+                JOptionPane.showMessageDialog(this, "加载图片时发生错误: " + e.getMessage(), "错误", JOptionPane.ERROR_MESSAGE);
+                e.printStackTrace();
+                return;
+            }
+        }
+        
+        scaleSpinner.setValue(template.getImageScale());
+        opacitySlider.setValue(template.getImageOpacity());
+        
+        // 加载通用参数
+        rotationSlider.setValue((int) template.getRotation());
+        
+        if (template.getPosition() != null) {
+            positionComboBox.setSelectedIndex(template.getPosition().ordinal());
+        }
+        
+        // 加载自定义位置（如果有的话）
+        if (template.getCustomPosition() != null) {
+            previewPanel.setUsePresetPosition(false);
+            previewPanel.setWatermarkPosition(template.getCustomPosition());
+        } else {
+            previewPanel.setUsePresetPosition(true);
+        }
+        
+        // 更新预览
+        updatePreview();
     }
 
     public boolean isConfirmed() {

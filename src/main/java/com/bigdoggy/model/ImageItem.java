@@ -1,10 +1,12 @@
 package com.bigdoggy.model;
 
+import lombok.Data;
 import javax.swing.*;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.File;
 
+@Data
 public class ImageItem {
     private String name;
     private ImageIcon icon;
@@ -14,22 +16,6 @@ public class ImageItem {
         this.name = name;
         this.icon = icon;
         this.file = file;
-    }
-
-    public String getName() {
-        return name;
-    }
-
-    public ImageIcon getIcon() {
-        return icon;
-    }
-
-    public File getFile() {
-        return file;
-    }
-
-    public void setIcon(ImageIcon icon) {
-        this.icon = icon;
     }
     
     public BufferedImage getBufferedImage() {
