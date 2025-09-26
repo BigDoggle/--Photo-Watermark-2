@@ -44,7 +44,7 @@ public class MainWindow {
         JPanel bottomPanel = createOutputFormatPanel();
         frame.add(bottomPanel, BorderLayout.SOUTH);
 
-        frame.setBounds(400, 300, 600, 500);
+        frame.setBounds(400, 300, 800, 500);
         frame.setDefaultCloseOperation(JFrame.EXIT_ON_CLOSE);
         frame.setVisible(true);
     }
@@ -64,6 +64,9 @@ public class MainWindow {
         JButton addTextWatermarkButton = new JButton("添加文本水印");
         addTextWatermarkButton.addActionListener(e -> imageImportController.addTextWatermark());
 
+        JButton addImageWatermarkButton = new JButton("添加图片水印");
+        addImageWatermarkButton.addActionListener(e -> imageImportController.addImageWatermark());
+
         JButton exportButton = new JButton("导出图片");
         exportButton.addActionListener(e -> imageImportController.exportImages());
 
@@ -71,6 +74,7 @@ public class MainWindow {
         toolbar.add(importMultipleButton);
         toolbar.add(importFolderButton);
         toolbar.add(addTextWatermarkButton);
+        toolbar.add(addImageWatermarkButton);
         toolbar.add(exportButton);
 
         return toolbar;

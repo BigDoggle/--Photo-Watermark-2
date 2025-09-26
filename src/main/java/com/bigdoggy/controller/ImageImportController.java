@@ -4,6 +4,7 @@ import com.bigdoggy.model.ImageItem;
 import com.bigdoggy.ui.ExportSettingsDialog;
 import com.bigdoggy.ui.MainWindow;
 import com.bigdoggy.ui.TextWatermarkDialog;
+import com.bigdoggy.ui.ImageWatermarkDialog;
 
 import javax.swing.*;
 import java.awt.*;
@@ -94,6 +95,26 @@ public class ImageImportController {
                 dialog.getWatermarkOpacity(),
                 dialog.hasShadow(),
                 dialog.hasOutline()
+            );
+        }
+    }
+
+    public void addImageWatermark() {
+        if (mainWindow.getImageListModel().getSize() == 0) {
+            JOptionPane.showMessageDialog(mainWindow.getFrame(), "请先导入图片", "提示", JOptionPane.INFORMATION_MESSAGE);
+            return;
+        }
+
+        // 显示图片水印设置对话框
+        ImageWatermarkDialog dialog = new ImageWatermarkDialog(mainWindow.getFrame());
+        dialog.setVisible(true);
+
+        if (dialog.isConfirmed()) {
+            // 应用图片水印到所有图片
+            applyImageWatermarkToAllImages(
+                dialog.getWatermarkImage(),
+                dialog.getScale(),
+                dialog.getWatermarkOpacity()
             );
         }
     }
@@ -231,6 +252,101 @@ public class ImageImportController {
         // 绘制文字水印
         g2d.drawString(text, x, y);
         
+        g2d.dispose();
+        return watermarkedImage;
+    }
+
+    private void applyImageWatermarkToAllImages(
+            BufferedImage watermarkImage,
+            double scale,
+            int opacity) {
+
+        try {
+            // 对所有图片应用水印
+            for (int i = 0; i < mainWindow.getImageListModel().getSize(); i++) {
+                ImageItem item = mainWindow.getImageListModel().getElementAt(i);
+                File originalFile = item.getFile();
+
+                // 读取原图
+                BufferedImage originalImage = ImageIO.read(originalFile);
+
+                // 创建带水印的图片
+                BufferedImage watermarkedImage = addImageWatermarkToImage(
+                    originalImage,
+                    watermarkImage,
+                    scale,
+                    opacity
+                );
+
+                // 更新ImageItem中的图片
+                ImageIcon updatedIcon = new ImageIcon(watermarkedImage);
+                item.setIcon(updatedIcon);
+            }
+
+            // 通知列表更新
+            mainWindow.updateImageList();
+
+            JOptionPane.showMessageDialog(mainWindow.getFrame(),
+                "图片水印已添加到所有图片",
+                "完成",
+                JOptionPane.INFORMATION_MESSAGE);
+        } catch (Exception e) {
+            JOptionPane.showMessageDialog(mainWindow.getFrame(),
+                "添加水印时发生错误：" + e.getMessage(),
+                "错误",
+                JOptionPane.ERROR_MESSAGE);
+            e.printStackTrace();
+        }
+    }
+
+    private BufferedImage addImageWatermarkToImage(
+            BufferedImage originalImage,
+            BufferedImage watermarkImage,
+            double scale,
+            int opacity) {
+
+        int originalWidth = originalImage.getWidth();
+        int originalHeight = originalImage.getHeight();
+
+        // 创建新的图片用于绘制水印
+        BufferedImage watermarkedImage = new BufferedImage(originalWidth, originalHeight, BufferedImage.TYPE_INT_ARGB);
+        Graphics2D g2d = watermarkedImage.createGraphics();
+
+        // 绘制原图
+        g2d.drawImage(originalImage, 0, 0, null);
+
+        // 设置抗锯齿
+        g2d.setRenderingHint(RenderingHints.KEY_ANTIALIASING, RenderingHints.VALUE_ANTIALIAS_ON);
+
+        // 计算水印尺寸
+        int scaledWidth = (int) (watermarkImage.getWidth() * scale / 100);
+        int scaledHeight = (int) (watermarkImage.getHeight() * scale / 100);
+
+        // 计算水印位置（右下角）
+        int x = originalWidth - scaledWidth - 20; // 距离右边20像素
+        int y = originalHeight - scaledHeight - 20; // 距离底部20像素
+
+        // 如果需要调整透明度，则创建带透明度的水印图像
+        if (opacity < 100) {
+            // 创建带透明度的水印图像
+            BufferedImage transparentWatermark = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
+            Graphics2D g2dWatermark = transparentWatermark.createGraphics();
+
+            // 设置透明度
+            float alpha = opacity / 100.0f;
+            g2dWatermark.setComposite(AlphaComposite.getInstance(AlphaComposite.SRC_OVER, alpha));
+
+            // 绘制水印图像
+            g2dWatermark.drawImage(watermarkImage, 0, 0, scaledWidth, scaledHeight, null);
+            g2dWatermark.dispose();
+
+            // 绘制带透明度的水印
+            g2d.drawImage(transparentWatermark, x, y, null);
+        } else {
+            // 直接绘制水印图像
+            g2d.drawImage(watermarkImage, x, y, scaledWidth, scaledHeight, null);
+        }
+
         g2d.dispose();
         return watermarkedImage;
     }

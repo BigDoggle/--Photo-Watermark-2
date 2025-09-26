@@ -22,7 +22,7 @@ public class TextWatermarkDialog extends JDialog {
     // 默认值
     private String watermarkText = "水印文本";
     private String fontName = "宋体";
-    private int fontSize = 24;
+    private int fontSize = 80;
     private boolean isBold = false;
     private boolean isItalic = false;
     private Color textColor = Color.BLACK;
@@ -52,7 +52,7 @@ public class TextWatermarkDialog extends JDialog {
         fontComboBox.setSelectedItem(fontName);
         
         // 字号选择
-        fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 72, 1));
+        fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 120, 1));
         
         // 粗体和斜体
         boldCheckBox = new JCheckBox("粗体", isBold);
