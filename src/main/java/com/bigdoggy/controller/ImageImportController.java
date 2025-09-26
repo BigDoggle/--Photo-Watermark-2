@@ -5,6 +5,7 @@ import com.bigdoggy.ui.ExportSettingsDialog;
 import com.bigdoggy.ui.MainWindow;
 import com.bigdoggy.ui.TextWatermarkDialog;
 import com.bigdoggy.ui.ImageWatermarkDialog;
+import com.bigdoggy.ui.WatermarkPreviewPanel;
 
 import javax.swing.*;
 import java.awt.*;
@@ -19,6 +20,7 @@ import java.io.File;
 import java.io.IOException;
 import java.util.List;
 import javax.imageio.ImageIO;
+import java.awt.geom.AffineTransform;
 
 public class ImageImportController {
     private MainWindow mainWindow;
@@ -79,8 +81,11 @@ public class ImageImportController {
             return;
         }
 
+        // 获取选中的图片用于预览
+        ImageItem selectedImage = mainWindow.getImageListModel().getElementAt(0);
+        
         // 显示文本水印设置对话框
-        TextWatermarkDialog dialog = new TextWatermarkDialog(mainWindow.getFrame());
+        TextWatermarkDialog dialog = new TextWatermarkDialog(mainWindow.getFrame(), selectedImage);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -94,7 +99,10 @@ public class ImageImportController {
                 dialog.getTextColor(),
                 dialog.getWatermarkOpacity(),
                 dialog.hasShadow(),
-                dialog.hasOutline()
+                dialog.hasOutline(),
+                dialog.getRotation(),
+                dialog.getPosition(),
+                dialog.getWatermarkPosition() // 添加自定义位置参数
             );
         }
     }
@@ -105,8 +113,11 @@ public class ImageImportController {
             return;
         }
 
+        // 获取选中的图片用于预览
+        ImageItem selectedImage = mainWindow.getImageListModel().getElementAt(0);
+        
         // 显示图片水印设置对话框
-        ImageWatermarkDialog dialog = new ImageWatermarkDialog(mainWindow.getFrame());
+        ImageWatermarkDialog dialog = new ImageWatermarkDialog(mainWindow.getFrame(), selectedImage);
         dialog.setVisible(true);
 
         if (dialog.isConfirmed()) {
@@ -114,7 +125,10 @@ public class ImageImportController {
             applyImageWatermarkToAllImages(
                 dialog.getWatermarkImage(),
                 dialog.getScale(),
-                dialog.getWatermarkOpacity()
+                dialog.getWatermarkOpacity(),
+                dialog.getRotation(),
+                dialog.getPosition(),
+                dialog.getWatermarkPosition() // 添加自定义位置参数
             );
         }
     }
@@ -128,7 +142,10 @@ public class ImageImportController {
             Color textColor, 
             int opacity, 
             boolean hasShadow, 
-            boolean hasOutline) {
+            boolean hasOutline,
+            double rotation,
+            WatermarkPreviewPanel.WatermarkPosition position,
+            Point customPosition) { // 添加自定义位置参数
         
         try {
             // 创建字体
@@ -161,13 +178,16 @@ public class ImageImportController {
                 BufferedImage originalImage = ImageIO.read(originalFile);
                 
                 // 创建带水印的图片
-                BufferedImage watermarkedImage = addTextWatermarkToImage(
+                BufferedImage watermarkedImage = addAdvancedTextWatermarkToImage(
                     originalImage, 
                     text, 
                     font, 
                     transparentColor, 
                     hasShadow, 
-                    hasOutline
+                    hasOutline,
+                    rotation,
+                    position,
+                    customPosition // 传递自定义位置
                 );
 
                 // 更新ImageItem中的图片
@@ -191,13 +211,16 @@ public class ImageImportController {
         }
     }
 
-    private BufferedImage addTextWatermarkToImage(
+    private BufferedImage addAdvancedTextWatermarkToImage(
             BufferedImage originalImage, 
             String text, 
             Font font, 
             Color textColor, 
             boolean hasShadow, 
-            boolean hasOutline) {
+            boolean hasOutline,
+            double rotation,
+            WatermarkPreviewPanel.WatermarkPosition position,
+            Point customPosition) { // 添加自定义位置参数
         
         int width = originalImage.getWidth();
         int height = originalImage.getHeight();
@@ -222,9 +245,62 @@ public class ImageImportController {
         int textWidth = fm.stringWidth(text);
         int textHeight = fm.getHeight();
         
-        // 计算水印位置（右下角）
-        int x = width - textWidth - 20; // 距离右边20像素
-        int y = height - 20; // 距离底部20像素
+        // 计算水印位置
+        int x = 0, y = 0;
+        
+        // 如果有自定义位置，则使用自定义位置，否则使用预设位置
+        if (customPosition != null) {
+            x = customPosition.x;
+            y = customPosition.y;
+        } else {
+            int margin = 20;
+            switch (position) {
+                case TOP_LEFT:
+                    x = margin;
+                    y = margin + fm.getAscent();
+                    break;
+                case TOP_CENTER:
+                    x = (width - textWidth) / 2;
+                    y = margin + fm.getAscent();
+                    break;
+                case TOP_RIGHT:
+                    x = width - textWidth - margin;
+                    y = margin + fm.getAscent();
+                    break;
+                case CENTER_LEFT:
+                    x = margin;
+                    y = (height + fm.getAscent()) / 2;
+                    break;
+                case CENTER:
+                    x = (width - textWidth) / 2;
+                    y = (height + fm.getAscent()) / 2;
+                    break;
+                case CENTER_RIGHT:
+                    x = width - textWidth - margin;
+                    y = (height + fm.getAscent()) / 2;
+                    break;
+                case BOTTOM_LEFT:
+                    x = margin;
+                    y = height - margin;
+                    break;
+                case BOTTOM_CENTER:
+                    x = (width - textWidth) / 2;
+                    y = height - margin;
+                    break;
+                case BOTTOM_RIGHT:
+                    x = width - textWidth - margin;
+                    y = height - margin;
+                    break;
+            }
+        }
+        
+        // 应用旋转
+        AffineTransform origTransform = g2d.getTransform();
+        AffineTransform transform = new AffineTransform();
+        transform.translate(x + textWidth/2.0, y - fm.getAscent()/2.0);
+        transform.rotate(Math.toRadians(rotation));
+        transform.translate(-(x + textWidth/2.0), -(y - fm.getAscent()/2.0));
+        g2d.setTransform(transform);
         
         // 绘制阴影效果
         if (hasShadow) {
@@ -252,6 +328,9 @@ public class ImageImportController {
         // 绘制文字水印
         g2d.drawString(text, x, y);
         
+        // 恢复原始变换
+        g2d.setTransform(origTransform);
+        
         g2d.dispose();
         return watermarkedImage;
     }
@@ -259,7 +338,10 @@ public class ImageImportController {
     private void applyImageWatermarkToAllImages(
             BufferedImage watermarkImage,
             double scale,
-            int opacity) {
+            int opacity,
+            double rotation,
+            WatermarkPreviewPanel.WatermarkPosition position,
+            Point customPosition) { // 添加自定义位置参数
 
         try {
             // 对所有图片应用水印
@@ -271,11 +353,14 @@ public class ImageImportController {
                 BufferedImage originalImage = ImageIO.read(originalFile);
 
                 // 创建带水印的图片
-                BufferedImage watermarkedImage = addImageWatermarkToImage(
+                BufferedImage watermarkedImage = addAdvancedImageWatermarkToImage(
                     originalImage,
                     watermarkImage,
                     scale,
-                    opacity
+                    opacity,
+                    rotation,
+                    position,
+                    customPosition // 传递自定义位置
                 );
 
                 // 更新ImageItem中的图片
@@ -299,11 +384,14 @@ public class ImageImportController {
         }
     }
 
-    private BufferedImage addImageWatermarkToImage(
+    private BufferedImage addAdvancedImageWatermarkToImage(
             BufferedImage originalImage,
             BufferedImage watermarkImage,
             double scale,
-            int opacity) {
+            int opacity,
+            double rotation,
+            WatermarkPreviewPanel.WatermarkPosition position,
+            Point customPosition) { // 添加自定义位置参数
 
         int originalWidth = originalImage.getWidth();
         int originalHeight = originalImage.getHeight();
@@ -322,11 +410,57 @@ public class ImageImportController {
         int scaledWidth = (int) (watermarkImage.getWidth() * scale / 100);
         int scaledHeight = (int) (watermarkImage.getHeight() * scale / 100);
 
-        // 计算水印位置（右下角）
-        int x = originalWidth - scaledWidth - 20; // 距离右边20像素
-        int y = originalHeight - scaledHeight - 20; // 距离底部20像素
+        // 计算水印位置
+        int x = 0, y = 0;
+        
+        // 如果有自定义位置，则使用自定义位置，否则使用预设位置
+        if (customPosition != null) {
+            x = customPosition.x;
+            y = customPosition.y;
+        } else {
+            int margin = 20;
+            switch (position) {
+                case TOP_LEFT:
+                    x = margin;
+                    y = margin;
+                    break;
+                case TOP_CENTER:
+                    x = (originalWidth - scaledWidth) / 2;
+                    y = margin;
+                    break;
+                case TOP_RIGHT:
+                    x = originalWidth - scaledWidth - margin;
+                    y = margin;
+                    break;
+                case CENTER_LEFT:
+                    x = margin;
+                    y = (originalHeight - scaledHeight) / 2;
+                    break;
+                case CENTER:
+                    x = (originalWidth - scaledWidth) / 2;
+                    y = (originalHeight - scaledHeight) / 2;
+                    break;
+                case CENTER_RIGHT:
+                    x = originalWidth - scaledWidth - margin;
+                    y = (originalHeight - scaledHeight) / 2;
+                    break;
+                case BOTTOM_LEFT:
+                    x = margin;
+                    y = originalHeight - scaledHeight - margin;
+                    break;
+                case BOTTOM_CENTER:
+                    x = (originalWidth - scaledWidth) / 2;
+                    y = originalHeight - scaledHeight - margin;
+                    break;
+                case BOTTOM_RIGHT:
+                    x = originalWidth - scaledWidth - margin;
+                    y = originalHeight - scaledHeight - margin;
+                    break;
+            }
+        }
 
         // 如果需要调整透明度，则创建带透明度的水印图像
+        BufferedImage finalWatermarkImage = watermarkImage;
         if (opacity < 100) {
             // 创建带透明度的水印图像
             BufferedImage transparentWatermark = new BufferedImage(scaledWidth, scaledHeight, BufferedImage.TYPE_INT_ARGB);
@@ -340,11 +474,22 @@ public class ImageImportController {
             g2dWatermark.drawImage(watermarkImage, 0, 0, scaledWidth, scaledHeight, null);
             g2dWatermark.dispose();
 
-            // 绘制带透明度的水印
-            g2d.drawImage(transparentWatermark, x, y, null);
+            finalWatermarkImage = transparentWatermark;
+        }
+        
+        // 应用旋转
+        if (rotation != 0) {
+            AffineTransform origTransform = g2d.getTransform();
+            AffineTransform transform = new AffineTransform();
+            transform.translate(x + scaledWidth/2.0, y + scaledHeight/2.0);
+            transform.rotate(Math.toRadians(rotation));
+            transform.translate(-x - scaledWidth/2.0, -y - scaledHeight/2.0);
+            g2d.setTransform(transform);
+            g2d.drawImage(finalWatermarkImage, x, y, null);
+            g2d.setTransform(origTransform);
         } else {
             // 直接绘制水印图像
-            g2d.drawImage(watermarkImage, x, y, scaledWidth, scaledHeight, null);
+            g2d.drawImage(finalWatermarkImage, x, y, scaledWidth, scaledHeight, null);
         }
 
         g2d.dispose();
