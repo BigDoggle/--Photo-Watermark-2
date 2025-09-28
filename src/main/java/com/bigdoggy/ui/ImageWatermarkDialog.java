@@ -24,7 +24,6 @@ public class ImageWatermarkDialog extends JDialog {
     // 图片水印设置
     private JLabel imagePreviewLabel;
     private JButton selectImageButton;
-    private JSpinner scaleSpinner;
     private JSlider opacitySlider;
     private JLabel opacityLabel;
     
@@ -39,7 +38,6 @@ public class ImageWatermarkDialog extends JDialog {
     private JButton loadTemplateButton;
     
     // 默认值
-    private double scale = 100.0; // 百分比
     private int watermarkOpacity = 100; // 0-100%
     
     // 高级设置默认值
@@ -74,10 +72,6 @@ public class ImageWatermarkDialog extends JDialog {
         selectImageButton = new JButton("选择图片");
         selectImageButton.setPreferredSize(new Dimension(100, 30));
         
-        // 缩放比例选择（用于图片水印本身）
-        scaleSpinner = new JSpinner(new SpinnerNumberModel(scale, 10, 500, 5));
-        scaleSpinner.setPreferredSize(new Dimension(80, 25));
-        
         // 透明度滑块
         opacitySlider = new JSlider(0, 100, watermarkOpacity);
         opacitySlider.setMajorTickSpacing(20);
@@ -95,7 +89,7 @@ public class ImageWatermarkDialog extends JDialog {
         previewPanel.setBorder(BorderFactory.createTitledBorder("预览"));
         
         // 缩放滑块（用于预览中的缩放）
-        scaleSlider = new JSlider(10, 500, (int)scale);
+        scaleSlider = new JSlider(10, 500, 100); // 默认值改为100
         scaleSlider.setMajorTickSpacing(50);
         scaleSlider.setMinorTickSpacing(10);
         scaleSlider.setPaintTicks(true);
@@ -151,34 +145,26 @@ public class ImageWatermarkDialog extends JDialog {
         gbc.gridx = 3; gbc.gridwidth = 1;
         mainPanel.add(selectImageButton, gbc);
         
-        // 缩放设置（用于图片水印本身）
-        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1;
-        mainPanel.add(new JLabel("缩放比例:"), gbc);
-        gbc.gridx = 1; gbc.gridwidth = 1;
-        mainPanel.add(scaleSpinner, gbc);
-        gbc.gridx = 2; gbc.gridwidth = 2;
-        mainPanel.add(new JLabel("%"), gbc);
-        
         // 透明度设置
-        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 1; gbc.gridwidth = 1; // 从2改为1
         mainPanel.add(opacityLabel, gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(opacitySlider, gbc);
         
         // 高级设置 - 缩放（用于预览中的缩放）
-        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 2; gbc.gridwidth = 1; // 从3改为2
         mainPanel.add(new JLabel("预览缩放:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(scaleSlider, gbc);
         
         // 高级设置 - 旋转
-        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 3; gbc.gridwidth = 1; // 从4改为3
         mainPanel.add(new JLabel("旋转:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(rotationSlider, gbc);
         
         // 高级设置 - 位置
-        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 1;
+        gbc.gridx = 0; gbc.gridy = 4; gbc.gridwidth = 1; // 从5改为4
         mainPanel.add(new JLabel("位置:"), gbc);
         gbc.gridx = 1; gbc.gridwidth = 3;
         mainPanel.add(positionComboBox, gbc);
@@ -187,7 +173,7 @@ public class ImageWatermarkDialog extends JDialog {
         JPanel templateButtonPanel = new JPanel(new FlowLayout(FlowLayout.LEFT, 10, 10));
         templateButtonPanel.add(saveTemplateButton);
         templateButtonPanel.add(loadTemplateButton);
-        gbc.gridx = 0; gbc.gridy = 6; gbc.gridwidth = 4;
+        gbc.gridx = 0; gbc.gridy = 5; gbc.gridwidth = 4; // 从6改为5
         mainPanel.add(templateButtonPanel, gbc);
         
         // 创建包含主设置和预览的中间面板
@@ -222,7 +208,6 @@ public class ImageWatermarkDialog extends JDialog {
             public void actionPerformed(ActionEvent e) {
                 if (watermarkImage != null) {
                     confirmed = true;
-                    scale = (Double) scaleSpinner.getValue();
                     watermarkOpacity = opacitySlider.getValue();
                     
                     // 高级设置值
@@ -257,15 +242,12 @@ public class ImageWatermarkDialog extends JDialog {
     }
 
     private void setupEventHandlers() {
-        // 缩放比例变化事件（用于图片水印本身）
-        scaleSpinner.addChangeListener(e -> updatePreview());
-        
         // 预览缩放滑块事件处理
         scaleSlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 // 确保即使在调整过程中也更新预览
-                updatePreview();
+                updatePreview(false); // 不强制更新位置
             }
         });
         
@@ -275,7 +257,7 @@ public class ImageWatermarkDialog extends JDialog {
             public void stateChanged(ChangeEvent e) {
                 // 确保即使在调整过程中也更新预览
                 rotation = rotationSlider.getValue();
-                updatePreview();
+                updatePreview(false); // 不强制更新位置
             }
         });
         
@@ -284,7 +266,7 @@ public class ImageWatermarkDialog extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 position = WatermarkPosition.values()[positionComboBox.getSelectedIndex()];
-                updatePreview();
+                updatePreview(true); // 强制更新位置
             }
         });
         
@@ -354,15 +336,28 @@ public class ImageWatermarkDialog extends JDialog {
     
     // 更新预览
     private void updatePreview() {
+        updatePreview(false);
+    }
+    
+    // 更新预览，forceUpdatePosition为true时强制更新位置
+    private void updatePreview(boolean forceUpdatePosition) {
         if (watermarkImage != null) {
-            double scaleValue = (Double) scaleSpinner.getValue();
             double previewScale = scaleSlider.getValue();
             previewPanel.setWatermarkImage(watermarkImage);
             previewPanel.setOpacity(watermarkOpacity);
             previewPanel.setScale(previewScale / 100.0);
             previewPanel.setRotation(rotation);
             previewPanel.setPresetPosition(position);
-            previewPanel.setUsePresetPosition(true); // 使用预设位置
+            
+            // 根据参数决定是否强制更新位置
+            if (forceUpdatePosition) {
+                previewPanel.setUsePresetPosition(true);
+            } else {
+                // 只有在使用预设位置时才设置为true，否则保持用户自定义的位置
+                if (previewPanel.isUsePresetPosition()) {
+                    previewPanel.setUsePresetPosition(true);
+                }
+            }
         }
     }
     
@@ -389,7 +384,6 @@ public class ImageWatermarkDialog extends JDialog {
         if (watermarkFile != null) {
             template.setImagePath(watermarkFile.getAbsolutePath());
         }
-        template.setImageScale((Double) scaleSpinner.getValue());
         template.setImageOpacity(opacitySlider.getValue());
         
         // 设置通用参数
@@ -442,7 +436,6 @@ public class ImageWatermarkDialog extends JDialog {
             }
         }
         
-        scaleSpinner.setValue(template.getImageScale());
         opacitySlider.setValue(template.getImageOpacity());
         
         // 加载通用参数
@@ -473,7 +466,7 @@ public class ImageWatermarkDialog extends JDialog {
     }
 
     public double getScale() {
-        return scale;
+        return scaleSlider.getValue(); // 返回预览缩放滑块的值
     }
 
     public int getWatermarkOpacity() {

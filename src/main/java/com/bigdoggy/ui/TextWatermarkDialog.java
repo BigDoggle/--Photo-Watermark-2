@@ -283,26 +283,26 @@ public class TextWatermarkDialog extends JDialog {
                     textColor = newColor;
                     colorButton.setBackground(textColor);
                     colorButton.setForeground(textColor);
-                    updatePreview();
+                    updatePreview(false); // 不强制更新位置
                 }
             }
         });
         
         // 添加所有控件的事件监听器以更新预览
-        textWatermarkField.addActionListener(e -> updatePreview());
-        fontComboBox.addActionListener(e -> updatePreview());
-        fontSizeSpinner.addChangeListener(e -> updatePreview());
-        boldCheckBox.addActionListener(e -> updatePreview());
-        italicCheckBox.addActionListener(e -> updatePreview());
+        textWatermarkField.addActionListener(e -> updatePreview(false)); // 不强制更新位置
+        fontComboBox.addActionListener(e -> updatePreview(false)); // 不强制更新位置
+        fontSizeSpinner.addChangeListener(e -> updatePreview(false)); // 不强制更新位置
+        boldCheckBox.addActionListener(e -> updatePreview(false)); // 不强制更新位置
+        italicCheckBox.addActionListener(e -> updatePreview(false)); // 不强制更新位置
         opacitySlider.addChangeListener(new ChangeListener() {
             @Override
             public void stateChanged(ChangeEvent e) {
                 watermarkOpacity = opacitySlider.getValue();
-                updatePreview();
+                updatePreview(false); // 不强制更新位置
             }
         });
-        shadowCheckBox.addActionListener(e -> updatePreview());
-        outlineCheckBox.addActionListener(e -> updatePreview());
+        shadowCheckBox.addActionListener(e -> updatePreview(false)); // 不强制更新位置
+        outlineCheckBox.addActionListener(e -> updatePreview(false)); // 不强制更新位置
         
         // 高级设置控件事件监听器
         rotationSlider.addChangeListener(new ChangeListener() {
@@ -310,7 +310,7 @@ public class TextWatermarkDialog extends JDialog {
             public void stateChanged(ChangeEvent e) {
                 // 确保即使在调整过程中也更新预览
                 rotation = rotationSlider.getValue();
-                updatePreview();
+                updatePreview(false); // 不强制更新位置
             }
         });
         
@@ -318,7 +318,7 @@ public class TextWatermarkDialog extends JDialog {
             @Override
             public void actionPerformed(ActionEvent e) {
                 position = WatermarkPosition.values()[positionComboBox.getSelectedIndex()];
-                updatePreview();
+                updatePreview(true); // 强制更新位置
             }
         });
         
@@ -340,6 +340,11 @@ public class TextWatermarkDialog extends JDialog {
     
     // 更新预览
     private void updatePreview() {
+        updatePreview(false);
+    }
+    
+    // 更新预览，forceUpdatePosition为true时强制更新位置
+    private void updatePreview(boolean forceUpdatePosition) {
         // 获取当前文本水印设置
         String text = textWatermarkField.getText();
         String fontName = (String) fontComboBox.getSelectedItem();
@@ -365,7 +370,16 @@ public class TextWatermarkDialog extends JDialog {
         previewPanel.setScale(1.0); // 文本水印不支持缩放，使用默认值1.0
         previewPanel.setRotation(rotation);
         previewPanel.setPresetPosition(position);
-        previewPanel.setUsePresetPosition(true); // 使用预设位置
+        
+        // 根据参数决定是否强制更新位置
+        if (forceUpdatePosition) {
+            previewPanel.setUsePresetPosition(true);
+        } else {
+            // 只有在使用预设位置时才设置为true，否则保持用户自定义的位置
+            if (previewPanel.isUsePresetPosition()) {
+                previewPanel.setUsePresetPosition(true);
+            }
+        }
     }
     
     // 保存为模板
