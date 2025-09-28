@@ -216,7 +216,7 @@ public class WatermarkPreviewPanel extends JPanel {
         } else {
             // 没有图片时显示提示文本
             g2d.setColor(Color.GRAY);
-            Font font = new Font("SansSerif", Font.PLAIN, 14);
+            Font font = new Font("黑体", Font.PLAIN, 16);
             g2d.setFont(font);
             FontMetrics fm = g2d.getFontMetrics();
             String text = "请选择一张图片进行预览";

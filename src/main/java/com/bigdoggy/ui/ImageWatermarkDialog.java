@@ -70,7 +70,7 @@ public class ImageWatermarkDialog extends JDialog {
         
         // 选择图片按钮
         selectImageButton = new JButton("选择图片");
-        selectImageButton.setPreferredSize(new Dimension(100, 30));
+        selectImageButton.setPreferredSize(new Dimension(120, 35));
         
         // 透明度滑块
         opacitySlider = new JSlider(0, 100, watermarkOpacity);
@@ -81,7 +81,7 @@ public class ImageWatermarkDialog extends JDialog {
         opacitySlider.setPreferredSize(new Dimension(250, 50));
         
         opacityLabel = new JLabel("透明度: " + watermarkOpacity + "%");
-        opacityLabel.setPreferredSize(new Dimension(120, 25));
+        opacityLabel.setPreferredSize(new Dimension(120, 30));
         
         // 高级设置组件
         previewPanel = new WatermarkPreviewPanel();
@@ -112,13 +112,13 @@ public class ImageWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
-        positionComboBox.setPreferredSize(new Dimension(150, 25));
+        positionComboBox.setPreferredSize(new Dimension(150, 30));
         
         // 模板管理按钮
         saveTemplateButton = new JButton("保存为模板");
-        saveTemplateButton.setPreferredSize(new Dimension(100, 30));
+        saveTemplateButton.setPreferredSize(new Dimension(120, 35));
         loadTemplateButton = new JButton("加载模板");
-        loadTemplateButton.setPreferredSize(new Dimension(100, 30));
+        loadTemplateButton.setPreferredSize(new Dimension(120, 35));
     }
 
     private void layoutComponents() {
@@ -187,9 +187,9 @@ public class ImageWatermarkDialog extends JDialog {
         // 按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton okButton = new JButton("确定");
-        okButton.setPreferredSize(new Dimension(80, 30));
+        okButton.setPreferredSize(new Dimension(80, 35));
         JButton cancelButton = new JButton("取消");
-        cancelButton.setPreferredSize(new Dimension(80, 30));
+        cancelButton.setPreferredSize(new Dimension(80, 35));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));

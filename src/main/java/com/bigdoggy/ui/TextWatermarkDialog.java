@@ -73,18 +73,22 @@ public class TextWatermarkDialog extends JDialog {
     private void initializeComponents() {
         // 文本水印内容
         textWatermarkField = new JTextField(watermarkText, 15);
-        textWatermarkField.setPreferredSize(new Dimension(200, 25));
+        textWatermarkField.setPreferredSize(new Dimension(200, 30));
         
         // 字体选择
         GraphicsEnvironment ge = GraphicsEnvironment.getLocalGraphicsEnvironment();
         String[] fontNames = ge.getAvailableFontFamilyNames();
         fontComboBox = new JComboBox<>(fontNames);
         fontComboBox.setSelectedItem(fontName);
-        fontComboBox.setPreferredSize(new Dimension(150, 25));
+        fontComboBox.setPreferredSize(new Dimension(150, 30));
         
         // 字号选择
         fontSizeSpinner = new JSpinner(new SpinnerNumberModel(fontSize, 8, 120, 1));
-        fontSizeSpinner.setPreferredSize(new Dimension(80, 25));
+        fontSizeSpinner.setPreferredSize(new Dimension(80, 30));
+        JComponent editor = fontSizeSpinner.getEditor();
+        if (editor instanceof JSpinner.DefaultEditor) {
+            ((JSpinner.DefaultEditor) editor).getTextField().setFont(LookAndFeelManager.getDefaultFont());
+        }
         
         // 粗体和斜体
         boldCheckBox = new JCheckBox("粗体", isBold);
@@ -94,7 +98,7 @@ public class TextWatermarkDialog extends JDialog {
         colorButton = new JButton("选择颜色");
         colorButton.setBackground(textColor);
         colorButton.setForeground(textColor);
-        colorButton.setPreferredSize(new Dimension(100, 25));
+        colorButton.setPreferredSize(new Dimension(100, 30));
         
         // 透明度滑块
         opacitySlider = new JSlider(0, 100, watermarkOpacity);
@@ -129,13 +133,13 @@ public class TextWatermarkDialog extends JDialog {
         };
         positionComboBox = new JComboBox<>(positions);
         positionComboBox.setSelectedIndex(8); // 默认右下角
-        positionComboBox.setPreferredSize(new Dimension(150, 25));
+        positionComboBox.setPreferredSize(new Dimension(150, 30));
         
         // 模板管理按钮
         saveTemplateButton = new JButton("保存为模板");
-        saveTemplateButton.setPreferredSize(new Dimension(100, 30));
+        saveTemplateButton.setPreferredSize(new Dimension(120, 35));
         loadTemplateButton = new JButton("加载模板");
-        loadTemplateButton.setPreferredSize(new Dimension(100, 30));
+        loadTemplateButton.setPreferredSize(new Dimension(120, 35));
     }
 
     private void layoutComponents() {
@@ -143,7 +147,6 @@ public class TextWatermarkDialog extends JDialog {
         
         // 主设置面板
         JPanel mainPanel = new JPanel(new GridBagLayout());
-        mainPanel.setBorder(BorderFactory.createTitledBorder("文本水印设置"));
         mainPanel.setBorder(BorderFactory.createCompoundBorder(
             BorderFactory.createTitledBorder("文本水印设置"),
             BorderFactory.createEmptyBorder(10, 10, 10, 10)
@@ -228,9 +231,9 @@ public class TextWatermarkDialog extends JDialog {
         // 按钮面板
         JPanel buttonPanel = new JPanel(new FlowLayout(FlowLayout.RIGHT, 10, 10));
         JButton okButton = new JButton("确定");
-        okButton.setPreferredSize(new Dimension(80, 30));
+        okButton.setPreferredSize(new Dimension(80, 35));
         JButton cancelButton = new JButton("取消");
-        cancelButton.setPreferredSize(new Dimension(80, 30));
+        cancelButton.setPreferredSize(new Dimension(80, 35));
         buttonPanel.add(okButton);
         buttonPanel.add(cancelButton);
         buttonPanel.setBorder(BorderFactory.createEmptyBorder(0, 0, 10, 10));

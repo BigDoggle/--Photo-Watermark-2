@@ -57,7 +57,7 @@ public class MainWindow {
         toolbar.setBorder(BorderFactory.createEmptyBorder(10, 10, 10, 10));
         
         // 设置统一的按钮大小和样式
-        Dimension buttonSize = new Dimension(120, 35);
+        Dimension buttonSize = new Dimension(130, 40);
 
         JButton importSingleButton = new JButton("导入单张图片");
         importSingleButton.setPreferredSize(buttonSize);
